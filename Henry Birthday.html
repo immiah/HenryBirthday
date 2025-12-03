@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Henry的勇者生日冒險：岡山篇</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts (Zen Maru Gothic for friendly, rounded DQ feel) -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* DQ Style Variables */
+        :root {
+            --dq-bg-primary: #fefefe; /* 淺色視窗背景 */
+            --dq-bg-secondary: #C8E6C9; /* 淡綠/米黃色世界地圖背景 */
+            --dq-border-color: #0D47A1; /* 深藍色邊框 (DQ 經典藍) */
+            --dq-text-color: #263238; /* 深灰色文字 */
+            --dq-highlight-color: #FFEB3B; /* 亮黃色高亮 (金幣/選中) */
+            --dq-important-color: #D32F2F; /* 紅色醒目 */
+        }
+
+        /* 設置全局字體和背景 */
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: var(--dq-bg-secondary);
+            color: var(--dq-text-color);
+        }
+
+        /* 模擬 DQ 視窗/卡片風格 */
+        .jrpg-window {
+            background-color: var(--dq-bg-primary);
+            border: 5px solid var(--dq-border-color); /* 更粗的邊框 */
+            border-radius: 8px;
+            box-shadow: 8px 8px 0px 0px rgba(13, 71, 161, 0.85); /* 更有層次的陰影 */
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        /* 模擬 DQ 按鈕風格 */
+        .jrpg-button {
+            @apply flex items-center justify-center p-3 text-sm font-bold transition duration-150 whitespace-nowrap;
+            background-color: var(--dq-highlight-color);
+            color: var(--dq-border-color);
+            border: 3px solid var(--dq-border-color);
+            border-radius: 4px;
+            box-shadow: 3px 3px 0px 0px rgba(13, 71, 161, 0.75);
+        }
+
+        .jrpg-button:active {
+            box-shadow: 1px 1px 0px 0px rgba(13, 71, 161, 0.75);
+            transform: translate(2px, 2px);
+        }
+
+        /* 底部導航按鈕 */
+        .nav-item {
+            @apply flex flex-col items-center justify-center text-xs p-1 font-bold transition duration-150;
+            background-color: var(--dq-border-color);
+            color: var(--dq-bg-primary);
+            min-width: 60px;
+        }
+
+        .nav-item.active {
+            background-color: var(--dq-highlight-color);
+            color: var(--dq-border-color);
+            border-top: 3px solid var(--dq-important-color);
+        }
+
+        /* 確保內容區域不會被底部導航遮擋 */
+        .main-content {
+            padding-bottom: 70px;
+        }
+
+        /* 匯率計算機 DQ 風格顯示 */
+        #calculator-display {
+            @apply text-right text-3xl p-3 mb-4 font-mono;
+            background-color: #CFD8DC;
+            border: 2px solid #607D8B;
+            border-radius: 4px;
+            min-height: 3.5rem;
+        }
+
+        /* 行程卡片標題裝飾 */
+        .dq-card-title {
+            @apply text-xl font-extrabold mb-3 p-2 rounded-sm text-white;
+            background-color: var(--dq-border-color);
+            border-bottom: 3px solid var(--dq-highlight-color);
+            text-shadow: 1px 1px 0 #000;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="app" class="max-w-md mx-auto bg-gray-100 min-h-screen relative">
+        <!-- 頂部標題區域 -->
+        <header class="p-4 bg-yellow-400 text-blue-900 border-b-4 border-blue-900 shadow-xl sticky top-0 z-10">
+            <h1 class="text-2xl font-black text-center tracking-wider">
+                <i class="fas fa-hat-wizard mr-2"></i> Henry's Birthday Quest <i class="fas fa-dragon ml-2"></i>
+            </h1>
+            <p class="text-xs text-center font-bold">勇者 Henry 的岡山冒險地圖 (12/4 - 12/7)</p>
+        </header>
+
+        <!-- 主要內容區域 -->
+        <main class="p-4 main-content">
+            <!-- PLAN (行程表) Tab -->
+            <section id="plan-tab" class="tab-content active">
+                <h2 class="text-2xl font-bold mb-4 text-center">
+                    <i class="fas fa-map-marked-alt mr-2"></i> 冒險地圖 (PLAN)
+                </h2>
+                <div id="itinerary-list">
+                    <!-- Itinerary will be rendered here by JS -->
+                </div>
+            </section>
+
+            <!-- GUIDE (深度導覽) Tab -->
+            <section id="guide-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-4 text-center">
+                    <i class="fas fa-book-open mr-2"></i> 賢者導覽 (GUIDE)
+                </h2>
+                <div class="jrpg-window p-4 space-y-6">
+                    <div class="dq-card-title !text-lg !p-1">倉敷美觀地區 - 時光之河的商人町</div>
+                    <p class="text-sm leading-relaxed border-l-4 border-blue-500 pl-3">
+                        倉敷在江戶時代是德川幕府的直轄地，因運河水運發達而成為重要的米倉集散地。保存完好的「白壁土蔵」（白牆倉庫）是其最大的特色，這種建築風格是為了防火設計的。夜晚的燈光倒映在運河上，景色如畫，是體驗日本歷史商業氛圍的最佳地點。
+                    </p>
+                    <div class="dq-card-title !text-lg !p-1">阿智神社 - 航海女神的庇佑</div>
+                    <p class="text-sm leading-relaxed border-l-4 border-blue-500 pl-3">
+                        阿智神社供奉著宗像三女神，自古以來就是守護倉敷港口和海上交通的信仰中心。除了歷史價值，從神社居高臨下可以俯瞰整個美觀地區，是絕佳的拍照點。每年春天著名的「阿知之藤」盛開時，紫藤花瀑布極為壯觀。
+                    </p>
+                    <div class="dq-card-title mt-6 !text-lg !p-1">倉敷地圖 (任務地點參考)</div>
+                    <!-- OpenStreetMap iframe for Kurashiki Bikan Historical Quarter -->
+                    <iframe 
+                        width="100%" 
+                        height="300" 
+                        frameborder="0" 
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0" 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=133.7719%2C34.5826%2C133.7844%2C34.5912&layer=mapnik&marker=34.5869%2C133.7781" 
+                        class="jrpg-window p-0 border-2 border-gray-600 shadow-md">
+                    </iframe>
+                </div>
+            </section>
+
+            <!-- WALLET (記帳與匯率) Tab -->
+            <section id="wallet-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-4 text-center">
+                    <i class="fas fa-yen-sign mr-2"></i> 財富之窗 (WALLET)
+                </h2>
+                <div class="jrpg-window">
+                    <div class="dq-card-title !text-lg">匯率魔法 (<span id="current-rate">0.22</span> JPY/TWD)</div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <input type="number" id="exchange-rate-input" placeholder="輸入匯率 (TWD)" class="flex-grow p-2 border-2 border-gray-400 rounded-md">
+                        <button id="set-rate-btn" class="jrpg-button p-2 text-sm bg-green-400 !text-white !shadow-none">設定</button>
+                    </div>
+
+                    <div class="dq-card-title !text-lg">即時計算機</div>
+                    <div id="calculator-display">0</div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <!-- Calculator buttons -->
+                        <button class="jrpg-button" data-key="1">1</button>
+                        <button class="jrpg-button" data-key="2">2</button>
+                        <button class="jrpg-button" data-key="3">3</button>
+                        <button class="jrpg-button bg-blue-200" data-key="/">÷</button>
+
+                        <button class="jrpg-button" data-key="4">4</button>
+                        <button class="jrpg-button" data-key="5">5</button>
+                        <button class="jrpg-button" data-key="6">6</button>
+                        <button class="jrpg-button bg-blue-200" data-key="*">×</button>
+
+                        <button class="jrpg-button" data-key="7">7</button>
+                        <button class="jrpg-button" data-key="8">8</button>
+                        <button class="jrpg-button" data-key="9">9</button>
+                        <button class="jrpg-button bg-blue-200" data-key="-">-</button>
+
+                        <button class="jrpg-button bg-red-500 !text-white font-black" data-key="C">C</button>
+                        <button class="jrpg-button" data-key="0">0</button>
+                        <button class="jrpg-button" data-key=".">.</button>
+                        <button class="jrpg-button bg-blue-200" data-key="+">+</button>
+
+                        <button class="jrpg-button col-span-4 bg-green-500 !text-white font-black" data-key="=">=</button>
+                    </div>
+                    <div class="mt-4 p-3 jrpg-window bg-yellow-100 !border-yellow-500 !shadow-none text-lg font-bold text-center">
+                        <span class="text-sm block">計算結果</span>
+                        <span id="jpy-result">0 JPY</span> ≈ <span id="twd-result" class="text-red-600">0 TWD</span>
+                    </div>
+                </div>
+
+                <!-- 記帳功能 -->
+                <div class="jrpg-window mt-4">
+                    <div class="dq-card-title !text-lg">記帳本 (RECORD)</div>
+                    <div class="space-y-3">
+                        <input type="text" id="expense-item" placeholder="品項名稱 (e.g., 布丁)" class="w-full p-2 border-2 border-gray-400 rounded-md">
+                        <input type="number" id="expense-jpy" placeholder="日幣金額 (JPY)" class="w-full p-2 border-2 border-gray-400 rounded-md">
+                        <div class="flex space-x-2">
+                            <input type="file" id="photo-upload" accept="image/*" class="hidden">
+                            <button id="upload-photo-btn" class="jrpg-button flex-grow bg-blue-400 !text-white">
+                                <i class="fas fa-camera mr-2"></i> 上傳收據/拍照
+                            </button>
+                            <button id="add-expense-btn" class="jrpg-button flex-grow bg-green-500 !text-white">
+                                <i class="fas fa-plus mr-2"></i> 紀錄
+                            </button>
+                        </div>
+                        <canvas id="photo-canvas" style="display:none;"></canvas>
+                        <p id="photo-status" class="text-xs text-center text-gray-500">未選擇照片</p>
+                    </div>
+                </div>
+
+                <!-- 記帳歷史列表 -->
+                <div class="jrpg-window mt-4">
+                    <div class="dq-card-title !text-lg flex justify-between items-center">
+                        <span>歷史紀錄</span>
+                        <button id="clear-expenses-btn" class="text-sm text-red-300 hover:text-white hover:underline">清除</button>
+                    </div>
+                    <div id="expense-list" class="space-y-3">
+                        <!-- Expense records will be rendered here by JS -->
+                    </div>
+                    <div id="expense-summary" class="mt-4 p-3 jrpg-window bg-red-100 !border-red-500 !shadow-none font-bold text-lg text-center">
+                        <span class="text-sm block">總花費總額</span> 
+                        <span id="total-jpy">0 JPY</span> ≈ <span id="total-twd" class="text-red-600">0 TWD</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LISTS (清單) Tab -->
+            <section id="lists-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-4 text-center">
+                    <i class="fas fa-clipboard-list mr-2"></i> 任務清單 (LISTS)
+                </h2>
+                <!-- 行前準備 CheckList -->
+                <div class="jrpg-window">
+                    <div class="dq-card-title !text-lg">行前準備 (CheckList)</div>
+                    <div id="checklist-container" class="space-y-2">
+                        <!-- Checklist items rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- 個人備忘錄 -->
+                <div class="jrpg-window mt-4">
+                    <div class="dq-card-title !text-lg">個人備忘錄 (Memo)</div>
+                    <textarea id="memo-textarea" rows="6" placeholder="輸入備忘文字或網址..." class="w-full p-2 border-2 border-gray-400 rounded-md"></textarea>
+                    <div id="memo-output" class="mt-3 p-2 border-t border-gray-300">
+                        <!-- Auto-converted links shown here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- INFO (資訊) Tab -->
+            <section id="info-tab" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-4 text-center">
+                    <i class="fas fa-info-circle mr-2"></i> 情報站 (INFO)
+                </h2>
+
+                <div class="jrpg-window">
+                    <div class="dq-card-title !text-lg">航班與住宿資訊</div>
+                    <div class="space-y-3 p-2 border-2 border-blue-200 rounded-md bg-blue-50">
+                        <p><i class="fas fa-plane-up text-blue-500 mr-2"></i> **去程航班**：<span class="text-red-600 font-bold">12/4 IT714 (13:05 - 16:30)</span></p>
+                        <p><i class="fas fa-plane-arrival text-blue-500 mr-2"></i> **回程航班**：<span class="text-red-600 font-bold">12/7 IT215 (15:25 - 17:30)</span></p>
+                        <p><i class="fas fa-hotel text-green-700 mr-2"></i> **住宿**：VIA INN 岡山</p>
+                        <p><i class="fas fa-address-book text-green-700 mr-2"></i> **地址**：1-25 Ekimotomachi, Kita Ward, Okayama</p>
+                        <p><i class="fas fa-clipboard-check text-yellow-600 mr-2"></i> **訂單號碼**：Booking 6026634882</p>
+                    </div>
+                </div>
+
+                <div class="jrpg-window mt-4">
+                    <div class="dq-card-title !text-lg">當地情報與緊急聯絡</div>
+                    <ul class="space-y-3 list-none p-0 border-2 border-red-200 rounded-md bg-red-50 p-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-cloud-sun mr-2 text-yellow-500"></i>
+                            <a href="https://www.jma.go.jp/jma/index.html" target="_blank" class="text-blue-600 hover:underline">當地天氣預報 (日本氣象廳)</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>
+                            **緊急電話**：警察 (110) / 救護車 (119)
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-address-card mr-2 text-gray-500"></i>
+                            **駐日辦事處**：東京 (03-3280-7811)
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="jrpg-window mt-4">
+                    <div class="dq-card-title !text-lg">勇者注意事項</div>
+                    <ul class="text-sm space-y-2 list-disc pl-5">
+                        <li>**必備清單**：護照、手機、錢包、鑰匙。</li>
+                        <li>**VJW App**：建議在飛機上完成填寫，加速日本通關時間。</li>
+                        <li>**出入境禁忌**：嚴禁攜帶肉製品、新鮮水果等違禁品，請務必留意海關規定。</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部導航列 -->
+        <footer id="nav-bar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-20">
+            <div class="flex justify-around p-1 bg-gray-800 border-t-4 border-yellow-400 shadow-xl">
+                <button class="nav-item active" data-tab="plan-tab"><i class="fas fa-map-marked-alt text-xl"></i><span>行程表</span></button>
+                <button class="nav-item" data-tab="guide-tab"><i class="fas fa-book-open text-xl"></i><span>導覽</span></button>
+                <button class="nav-item" data-tab="wallet-tab"><i class="fas fa-yen-sign text-xl"></i><span>記帳</span></button>
+                <button class="nav-item" data-tab="lists-tab"><i class="fas fa-clipboard-list text-xl"></i><span>清單</span></button>
+                <button class="nav-item" data-tab="info-tab"><i class="fas fa-info-circle text-xl"></i><span>資訊</span></button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const JRPG = (() => {
+            // --- 1. 基礎設定與數據 ---
+            const APP_ID = 'henry-dq-quest-2024';
+            let appState = {};
+            const DEFAULT_RATE = 0.22;
+            let currentRate = DEFAULT_RATE;
+
+            // Helper to extract the first Google Maps link and first general info link
+            const extractLinks = (linkString) => {
+                const parts = linkString.split(/\s*;\s*/).map(s => s.trim()).filter(s => s.length > 0);
+                const links = { maps: '', info: '' };
+
+                for (const part of parts) {
+                    // Check if it's a URL
+                    if (part.startsWith('http')) {
+                        if (part.includes('maps.app.goo.gl') || part.includes('google.com/maps')) {
+                            if (!links.maps) links.maps = part;
+                        } else if (!links.info) {
+                            links.info = part;
+                        }
+                    }
+                }
+                return links;
+            };
+
+            // Enhanced Itinerary Data with Notes and Multiple Links
+            const ITINERARY_DATA = [
+                {
+                    day: 'D1: 12月4日 (啟程日)',
+                    title: '出發！台灣 → 岡山',
+                    details: [
+                        { time: '09:36', item: '台中高鐵搭乘前往桃園高鐵', type: 'traffic', cost: 'TWD 700 (估)', highlight: true, notes: '務必提前抵達高鐵站換票。注意轉乘至機場捷運的時間。從桃園高鐵到機場約需 20 分鐘。', maps: 'https://maps.app.goo.gl/BmkAwaXw6AD1wuCH8', info: 'https://maps.app.goo.gl/8u1bn7iBn6q2BpKM8' },
+                        { time: '13:05', item: 'IT714 登機 (16:30 抵達)', type: 'flight', highlight: true, notes: '登機前記得開通eSIM卡。在飛機上即可開始填寫 VJW App (入境手續)。抵達岡山後，入境手續約需 1 小時。' },
+                        { time: '抵達', item: '搭乘機場巴士前往飯店', type: 'traffic', cost: 'JPY 1600 (估)', notes: '巴士在國際線航廈外即可搭乘。前往 Via Inn Okayama 的巴士需搭到岡山站西口。車程約 30 分鐘。', maps: 'https://www.okayama-airport.org/tw/access/bus' },
+                        { time: '住宿', item: '入住 Via Inn Okayama (JR西日本グループ)', type: 'hotel', notes: 'Check-in 後記得核對 Booking 訂單號碼: 6026634882。飯店位於岡山車站附近，交通便利。' },
+                        { time: '20:00', item: '晚餐: 町屋やきにく密陽家（食べログ百名店）', type: 'restaurant', highlight: true, notes: '已預約，請勿遲到。密陽家是知名的燒肉店，建議提前查好必點菜色。請預留足夠時間從飯店步行前往。', maps: 'https://share.google/OBbPj7VxgbGmX8xop', info: 'https://tabelog.com/okayama/A3301/A330101/33000570/' }
+                    ]
+                },
+                {
+                    day: 'D2: 12月5日',
+                    title: '倉敷美觀歷史巡禮',
+                    details: [
+                        { time: '早上', item: '搭乘JR前往倉敷', type: 'traffic', cost: 'JPY 330 (單程)', notes: '從岡山站搭乘 JR 山陽本線到倉敷站。車站有置物櫃可寄放物品。建議購買一日週遊券 (若有計畫)。', maps: 'https://maps.app.goo.gl/Ycgcrxr6VzZsRou48' },
+                        { time: '景點', item: '阿智神社', type: 'sightseeing', notes: '神社有較多石階，建議穿著舒適鞋子。這裡可以俯瞰美觀地區全景，適合拍照。預計停留 1 小時。', maps: 'https://maps.app.goo.gl/AmentmSE3WhzwBjRA' },
+                        { time: '午餐1', item: '有鄰庵 (特色蛋包飯)', type: 'restaurant', notes: '招牌是「幸福布丁」，記得預留胃給甜點。通常需要排隊，建議避開用餐高峰時段。位於美觀核心區。', maps: 'https://maps.app.goo.gl/NiWQnkn5Bvijj9f4A', info: 'https://share.google/ve3b9MRWNNeX4LAkJ' },
+                        { time: '午餐2', item: '梅之木味噌豬排 (備選)', type: 'restaurant', notes: '當地的特色味噌豬排，口味濃厚獨特。人氣很旺，可能需要等候。建議確認營業時間。', maps: 'https://maps.app.goo.gl/Re2wnppiJVU3ayi39', info: 'https://share.google/fNI964C3gj0PrX5BI' },
+                        { time: '午餐3', item: 'ふるいち 仲店 (備選)', type: 'restaurant', notes: '專賣「ぶっかけうどん」(澆汁烏龍麵)，是倉敷必吃美食。口感Q彈，夏天吃很清爽。位於倉敷站附近。', maps: 'https://maps.app.goo.gl/WdikYs3UzDVwxTG5A', info: 'https://share.google/Tk7p08vYt6HfJapS1' },
+                        { time: '甜點', item: '倉敷布丁', type: 'restaurant', notes: '美觀地區人氣甜點，有多種口味可選。瓶身設計精美，適合買來當伴手禮。位於美觀中心。', maps: 'https://maps.app.goo.gl/LpxUbDFYsLyudQcB8', info: 'https://share.google/ZE3xNo1D7c0HY15jh' },
+                        { time: '下午', item: '美觀地區 & Ario倉敷 (購物)', type: 'shopping', notes: '美觀地區主要以散步、拍照和逛文創小店為主。Ario倉敷購物中心在車站旁，可作為回岡山前逛街的選擇。' },
+                        { time: '晚餐1', item: 'Yakitori Shokunin Makoto Okayama Honten', type: 'restaurant', notes: '這家是知名的烤雞肉串職人店，是居酒屋風格。建議提前預約或避開尖峰時段。本店位於岡山站附近。', maps: 'https://maps.app.goo.gl/FpwAZb7B5QQPcJsc6', info: 'https://tabelog.com/en/okayama/A3301/A330101/33018833/' },
+                        { time: '晚餐2', item: '味司 野村 (備選)', type: 'restaurant', notes: '岡山有名的「デミカツ丼」(醬汁豬排蓋飯) 創始店。豬排酥脆，醬汁香濃，建議搭配味噌湯。人氣店可能需要排隊。', maps: 'https://maps.app.goo.gl/toAd3iP5qG9gt5DJ8', info: 'https://share.google/Gz9dw2FaBlEJe4GDy' }
+                    ]
+                },
+                {
+                    day: 'D3: 12月6日',
+                    title: '岡山市區與悠閒時光',
+                    details: [
+                        { time: '上午', item: '悠閒的自由時光', type: 'info', notes: '這天可以選擇睡晚一點，或探索車站周邊的小巷弄。建議確認當地咖啡廳的早餐營業時間。' },
+                        { time: '景點', item: 'Aeon Mall Okayama', type: 'shopping', notes: '岡山最大的購物中心之一，從車站地下道可直達。適合在這邊採購紀念品或逛日系品牌。預計停留 3 小時。', maps: 'https://maps.app.goo.gl/KSwc7ZsPMSJk86MG8' },
+                        { time: '午餐1', item: 'しゃぶしゃぶ すき焼き ひとり鍋 恵', type: 'restaurant', notes: '提供一人鍋的壽喜燒或涮涮鍋，適合單人或不想共鍋時。食材新鮮，可選多種肉品套餐。位於 Aeon Mall 附近。', maps: 'https://maps.app.goo.gl/fxXMiAdGWQS9F7xM8', info: 'https://share.google/jVFxKBUjroXuOU1KW' },
+                        { time: '午餐2', item: '400℃ PIZZA モリノマチ (2号店) (備選)', type: 'restaurant', notes: '道地的義式窯烤披薩，口味多樣，深受當地人喜愛。建議可以點選經典的瑪格麗特。餐廳空間舒適。', maps: 'https://maps.app.goo.gl/xzxZF225yU3RBkCJ7', info: 'https://share.google/cGRBQ1t864lo2KVx9' },
+                    ]
+                },
+                {
+                    day: 'D4: 12月7日 (歸賦日)',
+                    title: '早餐、採購與回程',
+                    details: [
+                        { time: '早餐1', item: '倉式珈琲店 (イオンモール岡山店)', type: 'restaurant', notes: '提供豐盛的日式早餐套餐，咖啡品質優良。位於 Aeon Mall 內，適合搭配最後採購。', maps: 'https://maps.app.goo.gl/Ei87iWLaqFVBTVWZ7', info: 'https://share.google/eI5BRDQ8yXYDuN0bF' },
+                        { time: '早餐2', item: 'STAND1-1(貝果) (備選)', type: 'restaurant', notes: '專賣多種口味的貝果，適合喜歡輕食的人。貝果口感紮實，飲品選擇也多樣。位於車站步行距離。', maps: 'https://maps.app.goo.gl/JQtzdLmmJn5rqk1o6', info: 'https://share.google/PkvzNmEeahQlKwQIk' },
+                        { time: '早餐3', item: 'public(麵包店) (備選)', type: 'restaurant', notes: '當地知名的手工麵包店，麵包種類豐富。可以外帶當作前往機場的點心。位於車站附近。', maps: 'https://maps.app.goo.gl/GduSKpiuyHmMXXQy7', info: 'https://share.google/Rv1SXNf0WBwDKJeUF' },
+                        { time: '中午', item: '前往岡山機場', type: 'traffic', cost: 'JPY 760 (單程)', highlight: true, notes: '請從岡山站西口搭乘機場巴士，車程約 30 分鐘。務必提前 2 小時抵達機場辦理登機手續。' },
+                        { time: '午餐', item: 'Chalon牛排 (機場餐廳)', type: 'restaurant', notes: '位於機場內的餐廳，可作為登機前的最後一餐。提供牛排等西式餐點。適合最後採購後輕鬆用餐。', maps: 'https://maps.app.goo.gl/iF8T1cy93hzUa37L9', info: 'https://share.google/bqqJB8dlIAidpzZyg' },
+                        { time: '15:25', item: 'IT215 登機回台 (17:30 抵達)', type: 'flight', highlight: true, notes: '請預留充足的時間在機場退稅和通關。回程務必檢查有無遺漏重要物品，特別是護照。' }
+                    ]
+                }
+            ];
+
+            const CHECKLIST_INITIAL = [
+                { item: '護照', checked: false },
+                { item: '手機/充電線/充電寶', checked: false },
+                { item: '錢包/日幣/信用卡', checked: false },
+                { item: '鑰匙/家門卡', checked: false },
+                { item: '換洗衣物', checked: false },
+                { item: '個人藥品/常備藥', checked: false },
+                { item: 'VJW App 已填寫完畢', checked: false },
+            ];
+
+            // --- 2. LocalStorage 處理 ---
+            const loadState = () => {
+                const storedState = localStorage.getItem(APP_ID);
+                if (storedState) {
+                    appState = JSON.parse(storedState);
+                } else {
+                    // 初始狀態
+                    appState = {
+                        exchangeRate: DEFAULT_RATE,
+                        expenses: [],
+                        checklist: CHECKLIST_INITIAL,
+                        memo: ''
+                    };
+                }
+                currentRate = appState.exchangeRate || DEFAULT_RATE;
+            };
+
+            const saveState = () => {
+                localStorage.setItem(APP_ID, JSON.stringify(appState));
+            };
+
+            // --- 3. 匯率/計算機功能 ---
+            const calculateTWD = (jpy) => (jpy * currentRate).toFixed(0);
+
+            let calculatorExpression = '0';
+            let awaitingNewOperand = false; 
+
+            const updateDisplay = () => {
+                const displayEl = document.getElementById('calculator-display');
+                const jpyResultEl = document.getElementById('jpy-result');
+                const twdResultEl = document.getElementById('twd-result');
+                displayEl.textContent = calculatorExpression;
+
+                let result;
+                try {
+                    // 替換運算符號以便 eval 執行
+                    const safeExpression = calculatorExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                    // 確保只計算最後一個完整的運算式，避免算式未完成時拋錯
+                    result = Function(`'use strict'; return (${safeExpression})`)();
+                    result = parseFloat(result.toFixed(2)); // 保持兩位小數
+                } catch (e) {
+                    result = 0;
+                }
+
+                jpyResultEl.textContent = `${result.toLocaleString()} JPY`;
+                twdResultEl.textContent = `${calculateTWD(result).toLocaleString()} TWD`;
+            };
+
+            const handleCalculatorInput = (key) => {
+                if (key === 'C') {
+                    calculatorExpression = '0';
+                    awaitingNewOperand = false;
+                } else if (key === '=') {
+                    try {
+                        const safeExpression = calculatorExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                        const result = Function(`'use strict'; return (${safeExpression})`)();
+                        calculatorExpression = String(parseFloat(result.toFixed(2))); // 顯示計算結果
+                        awaitingNewOperand = true;
+                    } catch (e) {
+                        calculatorExpression = '錯誤';
+                        awaitingNewOperand = true;
+                    }
+                } else if (['+', '-', '*', '/'].includes(key)) {
+                    const operator = key === '*' ? '×' : (key === '/' ? '÷' : key);
+                    const lastChar = calculatorExpression.slice(-1);
+                    if (['+', '-', '×', '÷'].includes(lastChar)) {
+                        calculatorExpression = calculatorExpression.slice(0, -1) + operator;
+                    } else {
+                        calculatorExpression += operator;
+                    }
+                    awaitingNewOperand = false;
+                } else { // 數字或點
+                    if (awaitingNewOperand || calculatorExpression === '0' || calculatorExpression === '錯誤') {
+                        calculatorExpression = key;
+                        awaitingNewOperand = false;
+                    } else if (key === '.' && ['+', '-', '×', '÷'].some(op => calculatorExpression.slice(calculatorExpression.lastIndexOf(op) + 1).includes('.'))) {
+                        // 防止在當前數字中重複輸入點
+                        return;
+                    } else {
+                        calculatorExpression += key;
+                    }
+                }
+                updateDisplay();
+            };
+
+            const initCalculator = () => {
+                document.querySelectorAll('#wallet-tab .grid button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const key = e.target.dataset.key;
+                        handleCalculatorInput(key);
+                    });
+                });
+
+                document.getElementById('set-rate-btn').addEventListener('click', () => {
+                    const input = document.getElementById('exchange-rate-input').value;
+                    const newRate = parseFloat(input);
+                    if (newRate > 0) {
+                        currentRate = newRate;
+                        appState.exchangeRate = newRate;
+                        document.getElementById('current-rate').textContent = newRate.toFixed(4);
+                        saveState();
+                        updateDisplay();
+                        renderExpenseList(); // 更新記帳列表台幣總額
+                        document.getElementById('exchange-rate-input').value = '';
+                    } else {
+                        console.error('Invalid exchange rate.');
+                    }
+                });
+
+                // 載入儲存的匯率
+                currentRate = appState.exchangeRate;
+                document.getElementById('current-rate').textContent = currentRate.toFixed(4);
+                updateDisplay();
+            };
+
+            // --- 4. 記帳功能 (Wallet) ---
+            let currentBase64Image = null; // 暫存 Base64 縮圖
+
+            // 壓縮圖片並轉為 Base64 (使用 Canvas)
+            const compressImage = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const MAX_WIDTH = 150; // 放大縮圖尺寸以提高辨識度
+                            const MAX_HEIGHT = 150;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+
+                            const canvas = document.getElementById('photo-canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            // 轉為 Base64 格式，降低畫質以節省 LocalStorage 空間 (品質 0.5)
+                            const base64Url = canvas.toDataURL('image/jpeg', 0.5);
+                            resolve(base64Url);
+                        };
+                        img.onerror = reject;
+                        img.src = event.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const initExpenseHandlers = () => {
+                const photoUpload = document.getElementById('photo-upload');
+                const uploadPhotoBtn = document.getElementById('upload-photo-btn');
+                const photoStatus = document.getElementById('photo-status');
+                const addExpenseBtn = document.getElementById('add-expense-btn');
+                const clearExpensesBtn = document.getElementById('clear-expenses-btn');
+
+                uploadPhotoBtn.addEventListener('click', () => {
+                    photoUpload.click();
+                });
+
+                photoUpload.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        photoStatus.textContent = `圖片壓縮中... (${(file.size / 1024).toFixed(1)} KB)`;
+                        try {
+                            currentBase64Image = await compressImage(file);
+                            photoStatus.textContent = '已選擇並壓縮收據 (點擊紀錄儲存)';
+                        } catch (error) {
+                            photoStatus.textContent = '圖片處理失敗，請重試或不傳照片。';
+                            currentBase64Image = null;
+                        }
+                    } else {
+                        currentBase64Image = null;
+                        photoStatus.textContent = '未選擇照片';
+                    }
+                });
+
+                addExpenseBtn.addEventListener('click', addExpense);
+
+                clearExpensesBtn.addEventListener('click', () => {
+                    if (window.confirm('確定要清除所有記帳紀錄嗎？此操作無法復原！')) {
+                        appState.expenses = [];
+                        saveState();
+                        renderExpenseList();
+                    }
+                });
+
+                renderExpenseList();
+            };
+
+            const addExpense = () => {
+                const item = document.getElementById('expense-item').value.trim();
+                const jpy = parseFloat(document.getElementById('expense-jpy').value);
+
+                if (item && jpy > 0) {
+                    const newExpense = {
+                        id: Date.now(),
+                        item,
+                        jpy: jpy.toFixed(2), // 確保金額為兩位小數
+                        twd: calculateTWD(jpy),
+                        timestamp: new Date().toISOString(),
+                        photo: currentBase64Image 
+                    };
+                    appState.expenses.push(newExpense);
+                    saveState();
+                    renderExpenseList();
+
+                    // 清空輸入
+                    document.getElementById('expense-item').value = '';
+                    document.getElementById('expense-jpy').value = '';
+                    document.getElementById('photo-upload').value = null;
+                    currentBase64Image = null;
+                    document.getElementById('photo-status').textContent = '未選擇照片';
+
+                } else {
+                    alert('請輸入有效的品項和金額 (JYP > 0)');
+                }
+            };
+
+            const deleteExpense = (id) => {
+                appState.expenses = appState.expenses.filter(exp => exp.id !== id);
+                saveState();
+                renderExpenseList();
+            };
+
+            const renderExpenseList = () => {
+                const listEl = document.getElementById('expense-list');
+                const totalJpyEl = document.getElementById('total-jpy');
+                const totalTwdEl = document.getElementById('total-twd');
+                listEl.innerHTML = '';
+                let totalJpy = 0;
+
+                const sortedExpenses = [...appState.expenses].sort((a, b) => b.id - a.id);
+
+                if (sortedExpenses.length === 0) {
+                    listEl.innerHTML = '<p class="text-center text-gray-500 p-4">目前無紀錄，開始您的第一筆花費吧！</p>';
+                    totalJpyEl.textContent = '0 JPY';
+                    totalTwdEl.textContent = '0 TWD';
+                    return;
+                }
+
+                sortedExpenses.forEach(expense => {
+                    totalJpy += parseFloat(expense.jpy);
+
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex items-center p-3 border-b border-gray-300 bg-gray-50 hover:bg-yellow-100 transition duration-100 rounded-sm';
+                    itemEl.innerHTML = `
+                        ${expense.photo ? `<img src="${expense.photo}" class="w-14 h-14 object-cover mr-3 rounded-sm border-2 border-gray-400 shadow-md" alt="Receipt Thumbnail">` : '<div class="w-14 h-14 bg-blue-100 flex items-center justify-center mr-3 rounded-sm text-blue-800 text-xs border-2 border-blue-400"><i class="fas fa-receipt text-lg"></i></div>'}
+                        <div class="flex-grow min-w-0">
+                            <p class="font-bold text-base truncate">${expense.item}</p>
+                            <p class="text-xs text-gray-600">${new Date(expense.timestamp).toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        <div class="text-right ml-4">
+                            <p class="font-black text-lg text-red-600">${parseFloat(expense.jpy).toLocaleString()} JPY</p>
+                            <p class="text-sm text-green-700">≈ ${calculateTWD(expense.jpy).toLocaleString()} TWD</p>
+                        </div>
+                        <button class="ml-3 text-red-400 hover:text-red-600 flex-shrink-0" data-id="${expense.id}" onclick="JRPG.deleteExpense(${expense.id})">
+                            <i class="fas fa-times-circle text-lg"></i>
+                        </button>
+                    `;
+                    listEl.appendChild(itemEl);
+                });
+
+                totalTwdEl.textContent = `${calculateTWD(totalJpy).toLocaleString()} TWD`;
+                totalJpyEl.textContent = `${totalJpy.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} JPY`;
+            };
+
+            // --- 5. 清單功能 (Lists) ---
+            const initListHandlers = () => {
+                renderChecklist();
+                const memoTextarea = document.getElementById('memo-textarea');
+                memoTextarea.value = appState.memo;
+                renderMemoOutput(appState.memo);
+
+                // 備忘錄輸入事件
+                memoTextarea.addEventListener('input', (e) => {
+                    appState.memo = e.target.value;
+                    saveState();
+                    renderMemoOutput(e.target.value);
+                });
+            };
+
+            const renderChecklist = () => {
+                const container = document.getElementById('checklist-container');
+                container.innerHTML = '';
+
+                appState.checklist.forEach((item, index) => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex items-center p-3 jrpg-window !mb-1 !p-3 !shadow-none !border-2 !border-gray-300 bg-blue-50';
+                    itemEl.innerHTML = `
+                        <input type="checkbox" id="check-${index}" data-index="${index}" class="form-checkbox h-5 w-5 text-blue-600 rounded-sm focus:ring-blue-500" ${item.checked ? 'checked' : ''}>
+                        <label for="check-${index}" class="ml-3 text-base font-medium ${item.checked ? 'line-through text-gray-500' : 'text-gray-800'}">${item.item}</label>
+                    `;
+                    container.appendChild(itemEl);
+                });
+
+                container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        appState.checklist[index].checked = e.target.checked;
+                        saveState();
+                        renderChecklist(); 
+                    });
+                });
+            };
+
+            const renderMemoOutput = (text) => {
+                const outputEl = document.getElementById('memo-output');
+                const lines = text.split('\n');
+                let html = '';
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+                lines.forEach(line => {
+                    if (line.match(urlRegex)) {
+                        const replacedLine = line.replace(urlRegex, (url) => {
+                            // Extract domain name for button text
+                            let domain = new URL(url).hostname;
+                            domain = domain.startsWith('www.') ? domain.substring(4) : domain;
+
+                            return `<a href="${url}" target="_blank" class="jrpg-button !text-xs !p-1 !inline-flex !bg-blue-300 !shadow-none !border-blue-700 mt-1 mr-2"><i class="fas fa-external-link-alt mr-1"></i> ${domain}</a>`;
+                        });
+                        html += `<p class="text-sm mb-1">${replacedLine}</p>`;
+                    } else if (line.trim().length > 0) {
+                        html += `<p class="text-sm mb-1">${line}</p>`;
+                    }
+                });
+
+                outputEl.innerHTML = html;
+            };
+
+            // --- 6. 行程表功能 (Plan) ---
+            const getIcon = (type) => {
+                switch (type) {
+                    case 'collection': return 'fa-users text-red-600';
+                    case 'traffic': return 'fa-bus text-blue-500';
+                    case 'flight': return 'fa-plane-departure text-indigo-500';
+                    case 'info': return 'fa-circle-info text-gray-500';
+                    case 'hotel': return 'fa-bed text-green-500';
+                    case 'restaurant': return 'fa-utensils text-yellow-600';
+                    case 'sightseeing': return 'fa-camera text-teal-500';
+                    case 'shopping': return 'fa-shopping-bag text-purple-500';
+                    default: return 'fa-star text-gray-400';
+                }
+            };
+
+            const getGoogleMapsSearchLink = (item) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item)}`;
+
+            const getGoogleSearchLink = (item) => `https://www.google.com/search?q=${encodeURIComponent(item)}`;
+
+            const renderItinerary = () => {
+                const listEl = document.getElementById('itinerary-list');
+                listEl.innerHTML = '';
+
+                ITINERARY_DATA.forEach(dayPlan => {
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'jrpg-window';
+
+                    let dayHtml = `<div class="dq-card-title">${dayPlan.day} - ${dayPlan.title}</div>`;
+
+                    dayPlan.details.forEach(detail => {
+                        const isImportant = detail.highlight;
+                        const iconClass = getIcon(detail.type);
+
+                        // Determine Links
+                        const mapLink = detail.maps || getGoogleMapsSearchLink(detail.item);
+                        const infoLink = detail.info || getGoogleSearchLink(detail.item + ' 岡山'); // Fallback to Google Search
+
+                        dayHtml += `
+                            <div class="flex items-start mb-4 p-2 rounded-md ${isImportant ? 'bg-red-50 border-2 border-red-300' : 'bg-white border-b border-gray-200'}">
+                                <div class="w-1/6 text-center pt-1 flex flex-col items-center">
+                                    <i class="fas ${iconClass} text-xl"></i>
+                                    <span class="text-xs font-bold mt-1">${detail.time}</span>
+                                </div>
+                                <div class="w-5/6 pl-2">
+                                    <p class="font-black text-base ${isImportant ? 'text-red-700' : 'text-gray-800'}">${detail.item}</p>
+                                    ${detail.notes ? `<p class="text-xs italic text-gray-600 mt-1 mb-2 border-l-2 border-yellow-500 pl-2">※ 備註：${detail.notes}</p>` : ''}
+                                    ${detail.cost ? `<p class="text-xs text-gray-700"><i class="fas fa-coins mr-1"></i> 交通/費用: <span class="font-bold">${detail.cost}</span></p>` : ''}
+                                    
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        <a href="${mapLink}" target="_blank" class="jrpg-button !text-xs !p-2 !bg-green-400 !text-white">
+                                            <i class="fas fa-map-pin mr-1"></i> 開啟 Google Maps
+                                        </a>
+                                        <a href="${infoLink}" target="_blank" class="jrpg-button !text-xs !p-2 !bg-blue-400 !text-white">
+                                            <i class="fas fa-search mr-1"></i> 查看詳情
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    dayCard.innerHTML = dayHtml;
+                    listEl.appendChild(dayCard);
+                });
+            };
+
+            // --- 7. 導航功能 ---
+            const initNavigation = () => {
+                document.getElementById('nav-bar').addEventListener('click', (e) => {
+                    const target = e.target.closest('.nav-item');
+                    if (!target) return;
+
+                    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+                    const targetTabId = target.dataset.tab;
+                    document.getElementById(targetTabId).classList.remove('hidden');
+                    target.classList.add('active');
+
+                    if (targetTabId === 'wallet-tab') {
+                        renderExpenseList();
+                        updateDisplay();
+                    }
+                });
+            };
+
+
+            // --- 8. 初始化 ---
+            const init = () => {
+                loadState(); 
+                initNavigation(); 
+                renderItinerary(); 
+                initCalculator(); 
+                initExpenseHandlers(); 
+                initListHandlers(); 
+            };
+
+            return {
+                init,
+                deleteExpense,
+            };
+        })();
+
+        // 頁面載入完成後啟動 App
+        window.onload = JRPG.init;
+
+        // 將 deleteExpense 函數暴露到全局，以便於 HTML 內聯調用
+        function deleteExpense(id) {
+            JRPG.deleteExpense(id);
+        }
+    </script>
+</body>
+</html>
